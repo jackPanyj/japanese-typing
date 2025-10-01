@@ -12,24 +12,24 @@ export default function ModeSelector({ onModeSelect }: ModeSelectorProps) {
   const modes = [
     {
       id: "hiragana" as const,
-      title: "五十音练习",
-      description: "练习日语五十音图的罗马字输入",
+      title: "Kana Practice",
+      description: "Practice Japanese kana input",
       icon: BookOpen,
       color: "bg-blue-500",
       hoverColor: "hover:bg-blue-600",
     },
     {
       id: "phrases" as const,
-      title: "短语练习",
-      description: "练习常用日语短语和表达",
+      title: "Phrase Practice",
+      description: "Practice common Japanese phrases",
       icon: MessageSquare,
       color: "bg-green-500",
       hoverColor: "hover:bg-green-600",
     },
     {
       id: "settings" as const,
-      title: "设置",
-      description: "自定义练习选项和难度",
+      title: "Settings",
+      description: "Customize options and difficulty",
       icon: Settings,
       color: "bg-gray-500",
       hoverColor: "hover:bg-gray-600",
@@ -45,10 +45,10 @@ export default function ModeSelector({ onModeSelect }: ModeSelectorProps) {
             <ThemeToggle />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
-            日语打字练习
+            Japanese Typing Practice
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            通过打字练习来学习日语五十音和常用短语，提高你的日语输入技能
+            Learn Japanese kana and common phrases through typing.
           </p>
         </div>
 
@@ -77,7 +77,7 @@ export default function ModeSelector({ onModeSelect }: ModeSelectorProps) {
         {/* Features */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">
-            功能特色
+            Features
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
@@ -85,10 +85,10 @@ export default function ModeSelector({ onModeSelect }: ModeSelectorProps) {
                 <Trophy className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h3 className="font-semibold text-gray-800 dark:text-white mb-2">
-                实时统计
+                Live stats
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                显示打字速度、准确率和进度
+                Track speed, accuracy, and progress
               </p>
             </div>
             <div className="text-center">
@@ -96,10 +96,10 @@ export default function ModeSelector({ onModeSelect }: ModeSelectorProps) {
                 <BookOpen className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="font-semibold text-gray-800 dark:text-white mb-2">
-                分级练习
+                Leveled practice
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                从基础五十音到实用短语
+                From basic kana to useful phrases
               </p>
             </div>
             <div className="text-center">
@@ -107,10 +107,10 @@ export default function ModeSelector({ onModeSelect }: ModeSelectorProps) {
                 <MessageSquare className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="font-semibold text-gray-800 dark:text-white mb-2">
-                实用内容
+                Practical content
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                学习日常对话和常用表达
+                Learn daily conversations and expressions
               </p>
             </div>
             <div className="text-center">
@@ -118,10 +118,10 @@ export default function ModeSelector({ onModeSelect }: ModeSelectorProps) {
                 <Settings className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
               <h3 className="font-semibold text-gray-800 dark:text-white mb-2">
-                个性化
+                Personalization
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                自定义练习难度和内容
+                Customize difficulty and content
               </p>
             </div>
           </div>

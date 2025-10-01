@@ -91,10 +91,10 @@ export default function PhraseSelector({
           className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          返回
+          Back
         </button>
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-          短语练习
+          Phrase Practice
         </h1>
         <ThemeToggle />
       </div>
@@ -104,7 +104,7 @@ export default function PhraseSelector({
         <div className="flex items-center mb-4">
           <Filter className="w-5 h-5 mr-2 text-gray-600 dark:text-gray-300" />
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            筛选选项
+            Filters
           </h2>
         </div>
 
@@ -112,14 +112,14 @@ export default function PhraseSelector({
           {/* Category Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              分类
+              Category
             </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">全部分类</option>
+              <option value="">All categories</option>
               {categories.map((category) => (
                 <option key={category} value={category}>
                   {category}
@@ -131,23 +131,23 @@ export default function PhraseSelector({
           {/* Difficulty Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              难度
+              Difficulty
             </label>
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value as any)}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">全部难度</option>
-              <option value="beginner">初级</option>
-              <option value="intermediate">中级</option>
-              <option value="advanced">高级</option>
+              <option value="">All difficulties</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
             </select>
           </div>
         </div>
 
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          筛选结果: {filteredPhrases.length} 个短语
+          Filtered: {filteredPhrases.length} phrases
         </div>
 
         <div className="flex flex-wrap gap-4">
@@ -155,13 +155,13 @@ export default function PhraseSelector({
             onClick={selectAllFiltered}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            全选筛选结果
+            Select all filtered
           </button>
           <button
             onClick={clearSelection}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
-            清空选择
+            Clear
           </button>
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function PhraseSelector({
       {/* Selection Controls */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          已选择: {selectedPhrases.length} 个短语
+          Selected: {selectedPhrases.length} phrases
         </div>
 
         <div className="flex gap-4">
@@ -179,7 +179,7 @@ export default function PhraseSelector({
             className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             <Play className="w-5 h-5 mr-2" />
-            顺序练习
+            Start sequential
           </button>
           <button
             onClick={startRandom}
@@ -187,7 +187,7 @@ export default function PhraseSelector({
             className="flex items-center px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             <Shuffle className="w-5 h-5 mr-2" />
-            随机练习
+            Start random
           </button>
         </div>
       </div>
@@ -195,7 +195,7 @@ export default function PhraseSelector({
       {/* Phrases List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-          选择练习短语
+          Pick phrases to practice
         </h2>
 
         <div className="space-y-3">
@@ -259,7 +259,7 @@ export default function PhraseSelector({
 
         {filteredPhrases.length === 0 && (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            没有找到匹配的短语
+            No matching phrases
           </div>
         )}
       </div>

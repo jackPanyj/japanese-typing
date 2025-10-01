@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Play, Shuffle } from "lucide-react";
 import {
   HiraganaChar,
@@ -22,6 +22,25 @@ export default function HiraganaSelector({
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [selectedChars, setSelectedChars] = useState<string[]>([]);
 
+  // Drag-to-select state for individual characters
+  const gridContainerRef = useRef<HTMLDivElement | null>(null);
+  const charRefMap = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const draggingRef = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dragCurrentRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [selectionRect, setSelectionRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const baseSelectionRef = useRef<Set<string>>(new Set());
+  const additiveModeRef = useRef(false);
+  const tempSelectionRef = useRef<Set<string>>(new Set());
+  const [tempSelectionTick, setTempSelectionTick] = useState(0);
+  const preventClickRef = useRef(false);
+
   const toggleRow = (rowIndex: number) => {
     setSelectedRows((prev) =>
       prev.includes(rowIndex)
@@ -37,6 +56,121 @@ export default function HiraganaSelector({
         : [...prev, hiragana]
     );
   };
+
+  const setCharRef = useCallback(
+    (id: string) => (el: HTMLButtonElement | null) => {
+      if (!el) {
+        charRefMap.current.delete(id);
+      } else {
+        charRefMap.current.set(id, el);
+      }
+    },
+    []
+  );
+
+  const computeSelection = useCallback(() => {
+    const start = dragStartRef.current;
+    const current = dragCurrentRef.current;
+    const x1 = Math.min(start.x, current.x);
+    const y1 = Math.min(start.y, current.y);
+    const x2 = Math.max(start.x, current.x);
+    const y2 = Math.max(start.y, current.y);
+
+    const container = gridContainerRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+
+    setSelectionRect({
+      left: x1 - containerRect.left,
+      top: y1 - containerRect.top,
+      width: x2 - x1,
+      height: y2 - y1,
+    });
+
+    const selected = new Set<string>();
+    charRefMap.current.forEach((el, id) => {
+      const r = el.getBoundingClientRect();
+      const intersects = !(
+        r.right < x1 ||
+        r.left > x2 ||
+        r.bottom < y1 ||
+        r.top > y2
+      );
+      if (intersects) {
+        selected.add(id);
+      }
+    });
+
+    const result = new Set<string>(
+      additiveModeRef.current ? baseSelectionRef.current : []
+    );
+    selected.forEach((id) => result.add(id));
+
+    tempSelectionRef.current = result;
+    setTempSelectionTick((t) => t + 1);
+  }, []);
+
+  const onPointerMoveWin = useCallback(
+    (e: PointerEvent) => {
+      if (!draggingRef.current) return;
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) {
+        preventClickRef.current = true;
+      }
+      dragCurrentRef.current = { x: e.clientX, y: e.clientY };
+      computeSelection();
+    },
+    [computeSelection]
+  );
+
+  const onPointerUpWin = useCallback(() => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    setIsDragging(false);
+    setSelectionRect(null);
+    window.removeEventListener("pointermove", onPointerMoveWin);
+
+    // Finalize selection
+    const final = Array.from(tempSelectionRef.current);
+    setSelectedChars(final);
+  }, [onPointerMoveWin]);
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener("pointermove", onPointerMoveWin);
+      window.removeEventListener("pointerup", onPointerUpWin);
+    };
+  }, [onPointerMoveWin, onPointerUpWin]);
+
+  const onGridPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
+      const container = gridContainerRef.current;
+      if (!container) return;
+
+      e.preventDefault();
+      try {
+        (e.currentTarget as any).setPointerCapture?.(e.pointerId);
+      } catch {}
+
+      additiveModeRef.current = e.shiftKey || e.metaKey || e.ctrlKey;
+      baseSelectionRef.current = new Set<string>(selectedChars);
+
+      draggingRef.current = true;
+      setIsDragging(true);
+      preventClickRef.current = false;
+      const x = e.clientX;
+      const y = e.clientY;
+      dragStartRef.current = { x, y };
+      dragCurrentRef.current = { x, y };
+      computeSelection();
+
+      window.addEventListener("pointermove", onPointerMoveWin);
+      window.addEventListener("pointerup", onPointerUpWin, { once: true });
+    },
+    [computeSelection, onPointerMoveWin, onPointerUpWin, selectedChars]
+  );
 
   const selectAll = () => {
     setSelectedRows(hiraganaRows.map((_, index) => index));
@@ -84,10 +218,10 @@ export default function HiraganaSelector({
           className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          返回
+          Back
         </button>
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-          五十音练习
+          Kana Practice
         </h1>
         <ThemeToggle />
       </div>
@@ -99,18 +233,18 @@ export default function HiraganaSelector({
             onClick={selectAll}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            全选
+            Select all
           </button>
           <button
             onClick={selectNone}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
-            清空
+            Clear
           </button>
         </div>
 
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          已选择: {getSelectedData().length} 个字符
+          Selected: {getSelectedData().length} characters
         </div>
 
         <div className="flex gap-4">
@@ -120,7 +254,7 @@ export default function HiraganaSelector({
             className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             <Play className="w-5 h-5 mr-2" />
-            顺序练习
+            Start sequential
           </button>
           <button
             onClick={startRandom}
@@ -128,7 +262,7 @@ export default function HiraganaSelector({
             className="flex items-center px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             <Shuffle className="w-5 h-5 mr-2" />
-            随机练习
+            Start random
           </button>
         </div>
       </div>
@@ -136,13 +270,13 @@ export default function HiraganaSelector({
       {/* Hiragana Grid */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-          选择练习内容
+          Pick content to practice
         </h2>
 
         {/* Row Selection */}
         <div className="mb-6">
           <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
-            按行选择
+            Select by row
           </h3>
           <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
             {hiraganaRows.map((row, index) => (
@@ -155,9 +289,9 @@ export default function HiraganaSelector({
                     : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300"
                 }`}
               >
-                <div className="text-sm font-medium">{row}行</div>
+                <div className="text-sm font-medium">Row {row}</div>
                 <div className="text-xs opacity-75">
-                  {getHiraganaByRow(index).length}个
+                  {getHiraganaByRow(index).length} items
                 </div>
               </button>
             ))}
@@ -167,25 +301,53 @@ export default function HiraganaSelector({
         {/* Individual Character Selection */}
         <div>
           <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
-            单独选择字符
+            Select individual characters
           </h3>
-          <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
-            {hiraganaData.map((char) => (
-              <button
-                key={char.hiragana}
-                onClick={() => toggleChar(char.hiragana)}
-                className={`p-3 rounded-lg border-2 transition-colors ${
-                  selectedChars.includes(char.hiragana)
-                    ? "bg-green-500 text-white border-green-500"
-                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-green-300"
-                }`}
-              >
-                <div className="text-lg japanese-text font-medium">
-                  {char.hiragana}
-                </div>
-                <div className="text-xs opacity-75">{char.romaji}</div>
-              </button>
-            ))}
+          <div
+            ref={gridContainerRef}
+            onPointerDown={onGridPointerDown}
+            className="grid grid-cols-5 md:grid-cols-10 gap-2 relative user-select-none select-none touch-none"
+          >
+            {hiraganaData.map((char) => {
+              const selected = isDragging
+                ? tempSelectionRef.current.has(char.hiragana)
+                : selectedChars.includes(char.hiragana);
+              return (
+                <button
+                  key={char.hiragana}
+                  ref={setCharRef(char.hiragana)}
+                  onClick={(ev) => {
+                    if (preventClickRef.current) {
+                      preventClickRef.current = false;
+                      return;
+                    }
+                    toggleChar(char.hiragana);
+                  }}
+                  className={`p-3 rounded-lg border-2 transition-colors ${
+                    selected
+                      ? "bg-green-500 text-white border-green-500"
+                      : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-green-300"
+                  }`}
+                >
+                  <div className="text-lg japanese-text font-medium">
+                    {char.hiragana}
+                  </div>
+                  <div className="text-xs opacity-75">{char.romaji}</div>
+                </button>
+              );
+            })}
+
+            {isDragging && selectionRect && (
+              <div
+                className="absolute border-2 border-indigo-400 bg-indigo-500/10 pointer-events-none"
+                style={{
+                  left: selectionRect.left,
+                  top: selectionRect.top,
+                  width: selectionRect.width,
+                  height: selectionRect.height,
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

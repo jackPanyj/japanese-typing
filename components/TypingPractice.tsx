@@ -279,16 +279,16 @@ export default function TypingPractice({
             className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors disabled:opacity-50"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
-            返回
+            Back
           </button>
           <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-            {mode === "hiragana" ? "五十音练习" : "短语练习"}
+            {mode === "hiragana" ? "Kana Practice" : "Phrase Practice"}
           </h1>
           <ThemeToggle />
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md mx-auto">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-            练习完成！
+            Practice Complete!
           </h2>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
@@ -297,7 +297,7 @@ export default function TypingPractice({
                 {typingState.stats.accuracy.toFixed(1)}%
               </div>
               <div className="text-sm text-green-700 dark:text-green-300">
-                准确率
+                Accuracy
               </div>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -313,7 +313,7 @@ export default function TypingPractice({
                 {typingState.stats.correctChars}
               </div>
               <div className="text-sm text-purple-700 dark:text-purple-300">
-                正确字符
+                Correct chars
               </div>
             </div>
             <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
@@ -321,7 +321,7 @@ export default function TypingPractice({
                 {(typingState.stats.timeElapsed / 60).toFixed(1)}
               </div>
               <div className="text-sm text-orange-700 dark:text-orange-300">
-                分钟
+                Minutes
               </div>
             </div>
           </div>
@@ -330,7 +330,7 @@ export default function TypingPractice({
             onClick={resetPractice}
             className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
           >
-            重新开始
+            Restart
           </button>
         </div>
       </div>
@@ -347,10 +347,10 @@ export default function TypingPractice({
           className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors disabled:opacity-50"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          返回
+          Back
         </button>
         <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-          {mode === "hiragana" ? "五十音练习" : "短语练习"}
+          {mode === "hiragana" ? "Kana Practice" : "Phrase Practice"}
         </h1>
         <ThemeToggle />
       </div>
@@ -359,10 +359,10 @@ export default function TypingPractice({
       <div className="mb-8">
         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
           <span>
-            进度: {typingState.currentIndex + 1} / {data.length}
+            Progress: {typingState.currentIndex + 1} / {data.length}
           </span>
           <span>
-            准确率:{" "}
+            Accuracy:{" "}
             {typingState.stats.totalChars > 0
               ? (
                   (typingState.stats.correctChars /
@@ -402,7 +402,7 @@ export default function TypingPractice({
             type="text"
             value={typingState.userInput}
             onChange={handleInputChange}
-            placeholder="输入日语..."
+            placeholder="Type Japanese..."
             className={`w-full max-w-md mx-auto px-4 py-3 text-lg border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
               typingState.userInput && !isCorrect
                 ? "border-red-300 bg-red-50 dark:bg-red-900/20"
@@ -415,28 +415,20 @@ export default function TypingPractice({
         </div>
 
         <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          目标:{" "}
+          Target:{" "}
           <span className="font-mono bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 rounded">
             {currentTarget}
           </span>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="font-semibold text-gray-700 dark:text-gray-300">
               正确
             </div>
             <div className="text-green-600 dark:text-green-400 font-bold">
               {typingState.stats.correctChars}
-            </div>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-            <div className="font-semibold text-gray-700 dark:text-gray-300">
-              错误
-            </div>
-            <div className="text-red-600 dark:text-red-400 font-bold">
-              {typingState.stats.incorrectChars}
             </div>
           </div>
           <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">

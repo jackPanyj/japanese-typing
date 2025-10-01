@@ -3,8 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
 export const metadata: Metadata = {
-  title: "日语打字练习",
-  description: "练习日语五十音和基本短语的打字网站",
+  title: "Japanese Typing Practice",
+  description: "Practice Japanese kana and common phrases through typing.",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
