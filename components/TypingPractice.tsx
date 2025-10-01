@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { ArrowLeft } from "lucide-react";
 import { HiraganaChar } from "@/data/hiragana";
 import { JapanesePhrase } from "@/data/phrases";
 import ThemeToggle from "./ThemeToggle";
@@ -9,6 +10,7 @@ interface TypingPracticeProps {
   mode: "hiragana" | "phrases";
   data: HiraganaChar[] | JapanesePhrase[];
   onComplete?: (stats: PracticeStats) => void;
+  onBack?: () => void;
 }
 
 interface PracticeStats {
@@ -34,6 +36,7 @@ export default function TypingPractice({
   mode,
   data,
   onComplete,
+  onBack,
 }: TypingPracticeProps) {
   const [typingState, setTypingState] = useState<TypingState>({
     currentIndex: 0,
@@ -54,6 +57,32 @@ export default function TypingPractice({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const advanceTimeoutRef = useRef<number | null>(null);
+
+  const speakJapanese = useCallback((text: string) => {
+    try {
+      if (!text) return;
+      const synth =
+        typeof window !== "undefined" ? window.speechSynthesis : null;
+      if (!synth) return;
+      // Stop any queued or ongoing speech to avoid overlap
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const voices = synth.getVoices();
+      const jaVoice = voices.find((v) =>
+        (v.lang || "").toLowerCase().startsWith("ja")
+      );
+      if (jaVoice) {
+        utter.voice = jaVoice;
+      }
+      utter.lang = "ja-JP";
+      utter.rate = 1;
+      utter.pitch = 1;
+      synth.speak(utter);
+    } catch (err) {
+      // Non-fatal: if TTS fails, continue silently
+      console.warn("Speech synthesis failed", err);
+    }
+  }, []);
 
   const getCurrentTarget = useCallback(() => {
     if (mode === "hiragana") {
@@ -154,6 +183,8 @@ export default function TypingPractice({
     });
 
     if (isCorrectNow && advanceTimeoutRef.current === null) {
+      // Play audio for the current expected Japanese text
+      speakJapanese(expected);
       const nextIndex = typingState.currentIndex + 1;
       advanceTimeoutRef.current = window.setTimeout(() => {
         setTypingState((prev) => {
@@ -241,7 +272,18 @@ export default function TypingPractice({
   if (typingState.isCompleted) {
     return (
       <div className="text-center space-y-6">
-        <div className="flex justify-end mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={onBack}
+            disabled={!onBack}
+            className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors disabled:opacity-50"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            返回
+          </button>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-white">
+            {mode === "hiragana" ? "五十音练习" : "短语练习"}
+          </h1>
           <ThemeToggle />
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md mx-auto">
@@ -297,8 +339,19 @@ export default function TypingPractice({
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      {/* Header with Theme Toggle */}
-      <div className="flex justify-end mb-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={onBack}
+          disabled={!onBack}
+          className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors disabled:opacity-50"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          返回
+        </button>
+        <h1 className="text-xl font-bold text-gray-800 dark:text-white">
+          {mode === "hiragana" ? "五十音练习" : "短语练习"}
+        </h1>
         <ThemeToggle />
       </div>
 

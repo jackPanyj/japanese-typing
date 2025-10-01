@@ -72,6 +72,7 @@ export default function Home() {
           <TypingPractice
             mode="hiragana"
             data={practiceData as HiraganaChar[]}
+            onBack={handleBack}
             onComplete={handlePracticeComplete}
           />
         );
@@ -81,6 +82,7 @@ export default function Home() {
           <TypingPractice
             mode="phrases"
             data={practiceData as JapanesePhrase[]}
+            onBack={handleBack}
             onComplete={handlePracticeComplete}
           />
         );
