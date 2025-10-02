@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Play, Shuffle, Volume2, PenTool } from "lucide-react";
+import React, { useCallback, useState } from "react";
+import { ArrowLeft, Play, Shuffle, PenTool } from "lucide-react";
 import {
   HiraganaChar,
   hiraganaData,
@@ -21,7 +21,6 @@ export default function HiraganaSelector({
   onStart,
 }: HiraganaSelectorProps) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [selectedChars, setSelectedChars] = useState<string[]>([]);
 
   const [showStrokeModal, setShowStrokeModal] = useState(false);
   const [selectedChar, setSelectedChar] = useState<string>("");
@@ -114,10 +113,7 @@ export default function HiraganaSelector({
     }
   }, []);
 
-  const handleAudioClick = (e: React.MouseEvent, hiragana: string) => {
-    e.stopPropagation();
-    speakJapanese(hiragana);
-  };
+  // Audio icon removed; card click handles audio playback
 
   const handleStrokeOrderClick = (e: React.MouseEvent, hiragana: string) => {
     e.stopPropagation();
@@ -129,21 +125,13 @@ export default function HiraganaSelector({
 
   const selectAll = () => {
     setSelectedRows(hiraganaRows.map((_, index) => index));
-    setSelectedChars([]);
   };
 
   const selectNone = () => {
     setSelectedRows([]);
-    setSelectedChars([]);
   };
 
   const getSelectedData = (): HiraganaChar[] => {
-    if (selectedChars.length > 0) {
-      return hiraganaData.filter((char) =>
-        selectedChars.includes(char.hiragana)
-      );
-    }
-
     if (selectedRows.length > 0) {
       return hiraganaData.filter((char) => selectedRows.includes(char.row));
     }
@@ -162,7 +150,7 @@ export default function HiraganaSelector({
     onStart(data);
   };
 
-  const hasSelection = selectedRows.length > 0 || selectedChars.length > 0;
+  const hasSelection = selectedRows.length > 0;
 
   // Grouping for display-only individual characters
   const baseRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -182,28 +170,21 @@ export default function HiraganaSelector({
       <div className="text-lg japanese-text font-medium">{char.hiragana}</div>
       <div className="text-xs opacity-75">{char.romaji}</div>
 
-      {/* Stroke order icon (left) and audio icon (right) */}
+      {/* Stroke order icon on the right */}
       {isStandardHiragana(char.hiragana) && (
         <div
           onClick={(e) => handleStrokeOrderClick(e, char.hiragana)}
-          className={`absolute top-1 left-1 p-1 rounded-full transition-colors cursor-pointer bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-600 dark:text-amber-300`}
+          className={`absolute top-1 right-1 p-1 rounded-full transition-colors cursor-pointer bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-600 dark:text-amber-300`}
           title="View stroke order"
         >
           <PenTool className="w-3 h-3" />
         </div>
       )}
-      <div
-        onClick={(e) => handleAudioClick(e, char.hiragana)}
-        className={`absolute top-1 right-1 p-1 rounded-full transition-colors cursor-pointer bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-600 dark:text-gray-300`}
-        title="Play audio"
-      >
-        <Volume2 className="w-3 h-3" />
-      </div>
     </button>
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <button
@@ -220,7 +201,7 @@ export default function HiraganaSelector({
       </div>
 
       {/* Selection Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
         <div className="flex flex-wrap gap-4 mb-4">
           <button
             onClick={selectAll}
@@ -261,7 +242,7 @@ export default function HiraganaSelector({
       </div>
 
       {/* Hiragana Grid */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
           Pick content to practice
         </h2>

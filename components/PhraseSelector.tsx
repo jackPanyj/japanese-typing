@@ -55,13 +55,11 @@ export default function PhraseSelector({
   };
 
   const filteredPhrases = getFilteredPhrases();
-  const canStartSequential =
-    Boolean(selectedCategory || selectedDifficulty) &&
-    filteredPhrases.length > 0;
+  const canStartSequential = filteredPhrases.length > 0;
   const canStartRandom = filteredPhrases.length > 0;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <button
@@ -78,7 +76,7 @@ export default function PhraseSelector({
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
         <div className="flex items-center mb-4">
           <Filter className="w-5 h-5 mr-2 text-gray-600 dark:text-gray-300" />
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
@@ -139,7 +137,7 @@ export default function PhraseSelector({
       </div>
 
       {/* Selection Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Selected filters: {selectedCategory || "All categories"} /{" "}
           {selectedDifficulty || "All difficulties"}
@@ -166,7 +164,7 @@ export default function PhraseSelector({
       </div>
 
       {/* Preview count */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Preview count: {filteredPhrases.length}
         </div>
