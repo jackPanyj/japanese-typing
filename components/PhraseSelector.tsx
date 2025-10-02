@@ -2,13 +2,7 @@
 
 import React, { useState } from "react";
 import { ArrowLeft, Play, Shuffle, Filter } from "lucide-react";
-import {
-  JapanesePhrase,
-  basicPhrases,
-  categories,
-  getPhrasesByCategory,
-  getPhrasesByDifficulty,
-} from "@/data/phrases";
+import { JapanesePhrase, basicPhrases, categories } from "@/data/phrases";
 import ThemeToggle from "./ThemeToggle";
 
 interface PhraseSelectorProps {
@@ -24,7 +18,7 @@ export default function PhraseSelector({
   const [selectedDifficulty, setSelectedDifficulty] = useState<
     "beginner" | "intermediate" | "advanced" | ""
   >("");
-  const [selectedPhrases, setSelectedPhrases] = useState<string[]>([]);
+  // No per-phrase selection; use filters only
 
   const getFilteredPhrases = (): JapanesePhrase[] => {
     let filtered = basicPhrases;
@@ -41,30 +35,12 @@ export default function PhraseSelector({
       );
     }
 
-    if (selectedPhrases.length > 0) {
-      filtered = filtered.filter((phrase) =>
-        selectedPhrases.includes(phrase.japanese)
-      );
-    }
-
     return filtered;
   };
 
-  const togglePhrase = (japanese: string) => {
-    setSelectedPhrases((prev) =>
-      prev.includes(japanese)
-        ? prev.filter((p) => p !== japanese)
-        : [...prev, japanese]
-    );
-  };
-
-  const selectAllFiltered = () => {
-    const filtered = getFilteredPhrases();
-    setSelectedPhrases(filtered.map((phrase) => phrase.japanese));
-  };
-
   const clearSelection = () => {
-    setSelectedPhrases([]);
+    setSelectedCategory("");
+    setSelectedDifficulty("");
   };
 
   const startRandom = () => {
@@ -79,8 +55,10 @@ export default function PhraseSelector({
   };
 
   const filteredPhrases = getFilteredPhrases();
-  const hasSelection =
-    selectedPhrases.length > 0 || selectedCategory || selectedDifficulty;
+  const canStartSequential =
+    Boolean(selectedCategory || selectedDifficulty) &&
+    filteredPhrases.length > 0;
+  const canStartRandom = filteredPhrases.length > 0;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -152,12 +130,6 @@ export default function PhraseSelector({
 
         <div className="flex flex-wrap gap-4">
           <button
-            onClick={selectAllFiltered}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Select all filtered
-          </button>
-          <button
             onClick={clearSelection}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
@@ -169,13 +141,14 @@ export default function PhraseSelector({
       {/* Selection Controls */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          Selected: {selectedPhrases.length} phrases
+          Selected filters: {selectedCategory || "All categories"} /{" "}
+          {selectedDifficulty || "All difficulties"}
         </div>
 
         <div className="flex gap-4">
           <button
             onClick={startSequential}
-            disabled={!hasSelection}
+            disabled={!canStartSequential}
             className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             <Play className="w-5 h-5 mr-2" />
@@ -183,7 +156,7 @@ export default function PhraseSelector({
           </button>
           <button
             onClick={startRandom}
-            disabled={!hasSelection}
+            disabled={!canStartRandom}
             className="flex items-center px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             <Shuffle className="w-5 h-5 mr-2" />
@@ -192,22 +165,17 @@ export default function PhraseSelector({
         </div>
       </div>
 
-      {/* Phrases List */}
+      {/* Preview count */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-          Pick phrases to practice
-        </h2>
-
+        <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+          Preview count: {filteredPhrases.length}
+        </div>
+        {/* Non-interactive preview list */}
         <div className="space-y-3">
           {filteredPhrases.map((phrase) => (
             <div
               key={phrase.japanese}
-              className={`p-4 rounded-lg border-2 transition-colors cursor-pointer ${
-                selectedPhrases.includes(phrase.japanese)
-                  ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600"
-                  : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-green-300"
-              }`}
-              onClick={() => togglePhrase(phrase.japanese)}
+              className="p-4 rounded-lg border-2 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -228,10 +196,10 @@ export default function PhraseSelector({
                       }`}
                     >
                       {phrase.difficulty === "beginner"
-                        ? "初级"
+                        ? "Beginner"
                         : phrase.difficulty === "intermediate"
-                        ? "中级"
-                        : "高级"}
+                        ? "Intermediate"
+                        : "Advanced"}
                     </div>
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -241,27 +209,15 @@ export default function PhraseSelector({
                     {phrase.category}
                   </div>
                 </div>
-                <div
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    selectedPhrases.includes(phrase.japanese)
-                      ? "bg-green-500 border-green-500"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  {selectedPhrases.includes(phrase.japanese) && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
               </div>
             </div>
           ))}
+          {filteredPhrases.length === 0 && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No matching phrases
+            </div>
+          )}
         </div>
-
-        {filteredPhrases.length === 0 && (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            No matching phrases
-          </div>
-        )}
       </div>
     </div>
   );

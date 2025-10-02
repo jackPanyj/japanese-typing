@@ -63,3 +63,38 @@ body {
   background-color: #fbbf24;
   color: #92400e;
 }
+
+.typing-burst {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background-color: rgb(79 70 229 / 0.6);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.5);
+  animation: typing-burst 400ms ease-out forwards;
+}
+
+@keyframes typing-burst {
+  to {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+svg[data-strokesvg] > g[data-strokesvg="strokes"] > * {
+  --time: 0.7s; /* time to draw a "max length stroke" */
+  --gap: 0.7s; /* time between stroke starts */
+  --delay: 0.5s; /* time before first stroke */
+  animation: s var(--time) linear forwards
+    calc(var(--i) * var(--gap) + var(--delay));
+  stroke-dasharray: 3333;
+  stroke-dashoffset: 3333;
+}
+
+@keyframes s {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

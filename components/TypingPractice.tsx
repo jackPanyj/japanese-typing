@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Volume2, PenTool } from "lucide-react";
+import StrokeOrderModal from "./StrokeOrderModal";
 import { HiraganaChar } from "@/data/hiragana";
 import { JapanesePhrase } from "@/data/phrases";
 import ThemeToggle from "./ThemeToggle";
@@ -57,6 +58,44 @@ export default function TypingPractice({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const advanceTimeoutRef = useRef<number | null>(null);
+  const burstContainerRef = useRef<HTMLDivElement>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const [showStrokeModal, setShowStrokeModal] = useState(false);
+
+  const ensureAudioContext = useCallback(async () => {
+    if (typeof window === "undefined") return null;
+    const AudioCtx: any =
+      (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return null;
+    let ctx = audioCtxRef.current as AudioContext | null;
+    if (!ctx) {
+      ctx = new AudioCtx();
+      audioCtxRef.current = ctx;
+    }
+    if (ctx && ctx.state === "suspended") {
+      try {
+        await ctx.resume();
+      } catch {}
+    }
+    return ctx;
+  }, []);
+
+  const playKeyClick = useCallback(async () => {
+    const ctx = await ensureAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    // subtle, short click with slight pitch variation
+    const base = 600;
+    const jitter = (Math.random() - 0.5) * 80;
+    osc.frequency.value = base + jitter;
+    osc.type = "sine";
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  }, [ensureAudioContext]);
 
   const speakJapanese = useCallback((text: string) => {
     try {
@@ -143,6 +182,21 @@ export default function TypingPractice({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const expected = getExpectedInput();
+
+    // Typing burst effect
+    if (burstContainerRef.current) {
+      const burst = document.createElement("span");
+      burst.className = "typing-burst";
+      const offset = Math.random() * 30 - 15; // spread horizontally
+      burst.style.left = `calc(50% + ${offset}px)`;
+      burstContainerRef.current.appendChild(burst);
+      window.setTimeout(() => {
+        burst.remove();
+      }, 450);
+    }
+
+    // Typing click sound
+    playKeyClick();
 
     if (!typingState.isActive) {
       setTypingState((prev) => ({
@@ -357,20 +411,9 @@ export default function TypingPractice({
 
       {/* Progress Bar */}
       <div className="mb-8">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
+        <div className="flex text-sm text-gray-600 dark:text-gray-300 mb-2">
           <span>
             Progress: {typingState.currentIndex + 1} / {data.length}
-          </span>
-          <span>
-            Accuracy:{" "}
-            {typingState.stats.totalChars > 0
-              ? (
-                  (typingState.stats.correctChars /
-                    typingState.stats.totalChars) *
-                  100
-                ).toFixed(1)
-              : 0}
-            %
           </span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -386,8 +429,29 @@ export default function TypingPractice({
       {/* Main Practice Area */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
         <div className="mb-8">
-          <div className="text-6xl japanese-text text-gray-800 dark:text-white mb-4">
-            {currentDisplay}
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="text-6xl japanese-text text-gray-800 dark:text-white">
+              {currentDisplay}
+            </div>
+            <button
+              type="button"
+              onClick={() => speakJapanese(currentDisplay)}
+              aria-label="Play audio"
+              className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+            >
+              <Volume2 className="w-5 h-5" />
+            </button>
+            {mode === "hiragana" && currentDisplay && (
+              <button
+                type="button"
+                onClick={() => setShowStrokeModal(true)}
+                aria-label="View stroke order"
+                className="p-2 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors"
+                title="View stroke order"
+              >
+                <PenTool className="w-5 h-5" />
+              </button>
+            )}
           </div>
           {currentEnglish && (
             <div className="text-lg text-gray-600 dark:text-gray-300 mb-4">
@@ -396,12 +460,18 @@ export default function TypingPractice({
           )}
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <input
             ref={inputRef}
             type="text"
             value={typingState.userInput}
             onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
+                e.preventDefault();
+                speakJapanese(getCurrentDisplay());
+              }
+            }}
             placeholder="Type Japanese..."
             className={`w-full max-w-md mx-auto px-4 py-3 text-lg border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
               typingState.userInput && !isCorrect
@@ -412,6 +482,14 @@ export default function TypingPractice({
             }`}
             disabled={typingState.isCompleted || typingState.isAwaitingAdvance}
           />
+          <div
+            ref={burstContainerRef}
+            className="pointer-events-none absolute inset-0"
+          ></div>
+        </div>
+
+        <div className="text-xs text-gray-500 dark:text-gray-400 mb-6">
+          Shortcut: Cmd/Ctrl + J to play audio
         </div>
 
         <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
@@ -447,6 +525,11 @@ export default function TypingPractice({
           </div>
         </div>
       </div>
+      <StrokeOrderModal
+        open={showStrokeModal}
+        onClose={() => setShowStrokeModal(false)}
+        char={currentDisplay}
+      />
     </div>
   );
 }
