@@ -1,5 +1,5 @@
 {
-  "name": "japanese-typing-practice",
+  "name": "japanese-typing",
   "main": ".vercel/output/static/_worker.js",
   "compatibility_date": "2025-10-02"
 }
