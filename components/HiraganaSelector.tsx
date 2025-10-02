@@ -23,24 +23,6 @@ export default function HiraganaSelector({
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [selectedChars, setSelectedChars] = useState<string[]>([]);
 
-  // Drag-to-select state for individual characters
-  const gridContainerRef = useRef<HTMLDivElement | null>(null);
-  const charRefMap = useRef<Map<string, HTMLButtonElement>>(new Map());
-  const draggingRef = useRef(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const dragCurrentRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [selectionRect, setSelectionRect] = useState<{
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const baseSelectionRef = useRef<Set<string>>(new Set());
-  const additiveModeRef = useRef(false);
-  const tempSelectionRef = useRef<Set<string>>(new Set());
-  const [tempSelectionTick, setTempSelectionTick] = useState(0);
-  const preventClickRef = useRef(false);
   const [showStrokeModal, setShowStrokeModal] = useState(false);
   const [selectedChar, setSelectedChar] = useState<string>("");
 
@@ -52,13 +34,7 @@ export default function HiraganaSelector({
     );
   };
 
-  const toggleChar = (hiragana: string) => {
-    setSelectedChars((prev) =>
-      prev.includes(hiragana)
-        ? prev.filter((c) => c !== hiragana)
-        : [...prev, hiragana]
-    );
-  };
+  // Individual character selection disabled by request
 
   // Check if the character is a standard hiragana (has stroke order data)
   const isStandardHiragana = useCallback((char: string) => {
@@ -149,120 +125,7 @@ export default function HiraganaSelector({
     setShowStrokeModal(true);
   };
 
-  const setCharRef = useCallback(
-    (id: string) => (el: HTMLButtonElement | null) => {
-      if (!el) {
-        charRefMap.current.delete(id);
-      } else {
-        charRefMap.current.set(id, el);
-      }
-    },
-    []
-  );
-
-  const computeSelection = useCallback(() => {
-    const start = dragStartRef.current;
-    const current = dragCurrentRef.current;
-    const x1 = Math.min(start.x, current.x);
-    const y1 = Math.min(start.y, current.y);
-    const x2 = Math.max(start.x, current.x);
-    const y2 = Math.max(start.y, current.y);
-
-    const container = gridContainerRef.current;
-    if (!container) return;
-    const containerRect = container.getBoundingClientRect();
-
-    setSelectionRect({
-      left: x1 - containerRect.left,
-      top: y1 - containerRect.top,
-      width: x2 - x1,
-      height: y2 - y1,
-    });
-
-    const selected = new Set<string>();
-    charRefMap.current.forEach((el, id) => {
-      const r = el.getBoundingClientRect();
-      const intersects = !(
-        r.right < x1 ||
-        r.left > x2 ||
-        r.bottom < y1 ||
-        r.top > y2
-      );
-      if (intersects) {
-        selected.add(id);
-      }
-    });
-
-    const result = new Set<string>(
-      additiveModeRef.current ? baseSelectionRef.current : []
-    );
-    selected.forEach((id) => result.add(id));
-
-    tempSelectionRef.current = result;
-    setTempSelectionTick((t) => t + 1);
-  }, []);
-
-  const onPointerMoveWin = useCallback(
-    (e: PointerEvent) => {
-      if (!draggingRef.current) return;
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      if (Math.abs(dx) + Math.abs(dy) > 4) {
-        preventClickRef.current = true;
-      }
-      dragCurrentRef.current = { x: e.clientX, y: e.clientY };
-      computeSelection();
-    },
-    [computeSelection]
-  );
-
-  const onPointerUpWin = useCallback(() => {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    setIsDragging(false);
-    setSelectionRect(null);
-    window.removeEventListener("pointermove", onPointerMoveWin);
-
-    // Finalize selection
-    const final = Array.from(tempSelectionRef.current);
-    setSelectedChars(final);
-  }, [onPointerMoveWin]);
-
-  useEffect(() => {
-    return () => {
-      window.removeEventListener("pointermove", onPointerMoveWin);
-      window.removeEventListener("pointerup", onPointerUpWin);
-    };
-  }, [onPointerMoveWin, onPointerUpWin]);
-
-  const onGridPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (e.button !== 0) return;
-      const container = gridContainerRef.current;
-      if (!container) return;
-
-      e.preventDefault();
-      try {
-        (e.currentTarget as any).setPointerCapture?.(e.pointerId);
-      } catch {}
-
-      additiveModeRef.current = e.shiftKey || e.metaKey || e.ctrlKey;
-      baseSelectionRef.current = new Set<string>(selectedChars);
-
-      draggingRef.current = true;
-      setIsDragging(true);
-      preventClickRef.current = false;
-      const x = e.clientX;
-      const y = e.clientY;
-      dragStartRef.current = { x, y };
-      dragCurrentRef.current = { x, y };
-      computeSelection();
-
-      window.addEventListener("pointermove", onPointerMoveWin);
-      window.addEventListener("pointerup", onPointerUpWin, { once: true });
-    },
-    [computeSelection, onPointerMoveWin, onPointerUpWin, selectedChars]
-  );
+  // Drag-to-select removed by request
 
   const selectAll = () => {
     setSelectedRows(hiraganaRows.map((_, index) => index));
@@ -300,6 +163,44 @@ export default function HiraganaSelector({
   };
 
   const hasSelection = selectedRows.length > 0 || selectedChars.length > 0;
+
+  // Grouping for display-only individual characters
+  const baseRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const voicedRows = [10, 11, 12, 13, 14];
+  const youonRows = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+
+  const baseChars = hiraganaData.filter((c) => baseRows.includes(c.row));
+  const voicedChars = hiraganaData.filter((c) => voicedRows.includes(c.row));
+  const youonChars = hiraganaData.filter((c) => youonRows.includes(c.row));
+
+  const renderCharCard = (char: HiraganaChar) => (
+    <button
+      key={char.hiragana}
+      onClick={() => speakJapanese(char.hiragana)}
+      className={`p-3 rounded-lg border-2 transition-colors relative bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600`}
+    >
+      <div className="text-lg japanese-text font-medium">{char.hiragana}</div>
+      <div className="text-xs opacity-75">{char.romaji}</div>
+
+      {/* Stroke order icon (left) and audio icon (right) */}
+      {isStandardHiragana(char.hiragana) && (
+        <div
+          onClick={(e) => handleStrokeOrderClick(e, char.hiragana)}
+          className={`absolute top-1 left-1 p-1 rounded-full transition-colors cursor-pointer bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-600 dark:text-amber-300`}
+          title="View stroke order"
+        >
+          <PenTool className="w-3 h-3" />
+        </div>
+      )}
+      <div
+        onClick={(e) => handleAudioClick(e, char.hiragana)}
+        className={`absolute top-1 right-1 p-1 rounded-full transition-colors cursor-pointer bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-600 dark:text-gray-300`}
+        title="Play audio"
+      >
+        <Volume2 className="w-3 h-3" />
+      </div>
+    </button>
+  );
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -390,86 +291,40 @@ export default function HiraganaSelector({
           </div>
         </div>
 
-        {/* Individual Character Selection */}
+        {/* Individual Character Selection (grouped) */}
         <div>
           <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
             Select individual characters
           </h3>
-          <div
-            ref={gridContainerRef}
-            onPointerDown={onGridPointerDown}
-            className="grid grid-cols-5 md:grid-cols-10 gap-2 relative user-select-none select-none touch-none"
-          >
-            {hiraganaData.map((char) => {
-              const selected = isDragging
-                ? tempSelectionRef.current.has(char.hiragana)
-                : selectedChars.includes(char.hiragana);
-              return (
-                <button
-                  key={char.hiragana}
-                  ref={setCharRef(char.hiragana)}
-                  onClick={(ev) => {
-                    if (preventClickRef.current) {
-                      preventClickRef.current = false;
-                      return;
-                    }
-                    toggleChar(char.hiragana);
-                  }}
-                  className={`p-3 rounded-lg border-2 transition-colors relative ${
-                    selected
-                      ? "bg-green-500 text-white border-green-500"
-                      : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-green-300"
-                  }`}
-                >
-                  <div className="text-lg japanese-text font-medium">
-                    {char.hiragana}
-                  </div>
-                  <div className="text-xs opacity-75">{char.romaji}</div>
 
-                  {/* Audio and stroke order buttons */}
-                  <div className="absolute top-1 right-1 flex gap-1">
-                    <button
-                      onClick={(e) => handleAudioClick(e, char.hiragana)}
-                      className={`p-1 rounded-full transition-colors ${
-                        selected
-                          ? "bg-white/20 hover:bg-white/30 text-white"
-                          : "bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-600 dark:text-gray-300"
-                      }`}
-                      title="Play audio"
-                    >
-                      <Volume2 className="w-3 h-3" />
-                    </button>
-                    {isStandardHiragana(char.hiragana) && (
-                      <button
-                        onClick={(e) =>
-                          handleStrokeOrderClick(e, char.hiragana)
-                        }
-                        className={`p-1 rounded-full transition-colors ${
-                          selected
-                            ? "bg-white/20 hover:bg-white/30 text-white"
-                            : "bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-600 dark:text-amber-300"
-                        }`}
-                        title="View stroke order"
-                      >
-                        <PenTool className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+          {/* Basic gojuon */}
+          <div className="mb-6">
+            <div className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+              Basic gojuon
+            </div>
+            <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+              {baseChars.map(renderCharCard)}
+            </div>
+          </div>
 
-            {isDragging && selectionRect && (
-              <div
-                className="absolute border-2 border-indigo-400 bg-indigo-500/10 pointer-events-none"
-                style={{
-                  left: selectionRect.left,
-                  top: selectionRect.top,
-                  width: selectionRect.width,
-                  height: selectionRect.height,
-                }}
-              />
-            )}
+          {/* Voiced / Semi-voiced */}
+          <div className="mb-6">
+            <div className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+              Voiced / Semi-voiced
+            </div>
+            <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+              {voicedChars.map(renderCharCard)}
+            </div>
+          </div>
+
+          {/* Contracted sounds (youon) */}
+          <div>
+            <div className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+              Contracted sounds (youon)
+            </div>
+            <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+              {youonChars.map(renderCharCard)}
+            </div>
           </div>
         </div>
       </div>
