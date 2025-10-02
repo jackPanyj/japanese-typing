@@ -165,7 +165,7 @@ export default function HiraganaSelector({
     <button
       key={char.hiragana}
       onClick={() => speakJapanese(char.hiragana)}
-      className={`p-3 rounded-lg border-2 transition-colors relative bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600`}
+      className={`p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg border-2 transition-colors relative bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600`}
     >
       <div className="text-lg japanese-text font-medium">{char.hiragana}</div>
       <div className="text-xs opacity-75">{char.romaji}</div>
