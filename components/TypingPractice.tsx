@@ -161,6 +161,66 @@ export default function TypingPractice({
     return "";
   }, [mode, data, typingState.currentIndex]);
 
+  // Check if the current character is a standard hiragana (has stroke order data)
+  const isStandardHiragana = useCallback(
+    (char: string) => {
+      if (mode !== "hiragana" || !char) return false;
+
+      // Standard hiragana characters that have stroke order data
+      const standardHiragana = [
+        "あ",
+        "い",
+        "う",
+        "え",
+        "お", // a, i, u, e, o
+        "か",
+        "き",
+        "く",
+        "け",
+        "こ", // ka, ki, ku, ke, ko
+        "さ",
+        "し",
+        "す",
+        "せ",
+        "そ", // sa, shi, su, se, so
+        "た",
+        "ち",
+        "つ",
+        "て",
+        "と", // ta, chi, tsu, te, to
+        "な",
+        "に",
+        "ぬ",
+        "ね",
+        "の", // na, ni, nu, ne, no
+        "は",
+        "ひ",
+        "ふ",
+        "へ",
+        "ほ", // ha, hi, fu, he, ho
+        "ま",
+        "み",
+        "む",
+        "め",
+        "も", // ma, mi, mu, me, mo
+        "や",
+        "ゆ",
+        "よ", // ya, yu, yo
+        "ら",
+        "り",
+        "る",
+        "れ",
+        "ろ", // ra, ri, ru, re, ro
+        "わ",
+        "を",
+        "ん", // wa, wo, n
+      ];
+
+      return standardHiragana.includes(char);
+    },
+    [mode]
+  );
+
   const calculateStats = useCallback(
     (correct: number, incorrect: number, timeElapsed: number) => {
       const totalChars = correct + incorrect;
@@ -441,17 +501,19 @@ export default function TypingPractice({
             >
               <Volume2 className="w-5 h-5" />
             </button>
-            {mode === "hiragana" && currentDisplay && (
-              <button
-                type="button"
-                onClick={() => setShowStrokeModal(true)}
-                aria-label="View stroke order"
-                className="p-2 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors"
-                title="View stroke order"
-              >
-                <PenTool className="w-5 h-5" />
-              </button>
-            )}
+            {mode === "hiragana" &&
+              currentDisplay &&
+              isStandardHiragana(currentDisplay) && (
+                <button
+                  type="button"
+                  onClick={() => setShowStrokeModal(true)}
+                  aria-label="View stroke order"
+                  className="p-2 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors"
+                  title="View stroke order"
+                >
+                  <PenTool className="w-5 h-5" />
+                </button>
+              )}
           </div>
           {currentEnglish && (
             <div className="text-lg text-gray-600 dark:text-gray-300 mb-4">

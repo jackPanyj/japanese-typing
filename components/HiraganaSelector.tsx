@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Play, Shuffle } from "lucide-react";
+import { ArrowLeft, Play, Shuffle, Volume2, PenTool } from "lucide-react";
 import {
   HiraganaChar,
   hiraganaData,
@@ -9,6 +9,7 @@ import {
   getHiraganaByRow,
 } from "@/data/hiragana";
 import ThemeToggle from "./ThemeToggle";
+import StrokeOrderModal from "./StrokeOrderModal";
 
 interface HiraganaSelectorProps {
   onBack: () => void;
@@ -40,6 +41,8 @@ export default function HiraganaSelector({
   const tempSelectionRef = useRef<Set<string>>(new Set());
   const [tempSelectionTick, setTempSelectionTick] = useState(0);
   const preventClickRef = useRef(false);
+  const [showStrokeModal, setShowStrokeModal] = useState(false);
+  const [selectedChar, setSelectedChar] = useState<string>("");
 
   const toggleRow = (rowIndex: number) => {
     setSelectedRows((prev) =>
@@ -55,6 +58,95 @@ export default function HiraganaSelector({
         ? prev.filter((c) => c !== hiragana)
         : [...prev, hiragana]
     );
+  };
+
+  // Check if the character is a standard hiragana (has stroke order data)
+  const isStandardHiragana = useCallback((char: string) => {
+    const standardHiragana = [
+      "あ",
+      "い",
+      "う",
+      "え",
+      "お", // a, i, u, e, o
+      "か",
+      "き",
+      "く",
+      "け",
+      "こ", // ka, ki, ku, ke, ko
+      "さ",
+      "し",
+      "す",
+      "せ",
+      "そ", // sa, shi, su, se, so
+      "た",
+      "ち",
+      "つ",
+      "て",
+      "と", // ta, chi, tsu, te, to
+      "な",
+      "に",
+      "ぬ",
+      "ね",
+      "の", // na, ni, nu, ne, no
+      "は",
+      "ひ",
+      "ふ",
+      "へ",
+      "ほ", // ha, hi, fu, he, ho
+      "ま",
+      "み",
+      "む",
+      "め",
+      "も", // ma, mi, mu, me, mo
+      "や",
+      "ゆ",
+      "よ", // ya, yu, yo
+      "ら",
+      "り",
+      "る",
+      "れ",
+      "ろ", // ra, ri, ru, re, ro
+      "わ",
+      "を",
+      "ん", // wa, wo, n
+    ];
+    return standardHiragana.includes(char);
+  }, []);
+
+  // Audio playback function
+  const speakJapanese = useCallback((text: string) => {
+    try {
+      if (!text) return;
+      const synth =
+        typeof window !== "undefined" ? window.speechSynthesis : null;
+      if (!synth) return;
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const voices = synth.getVoices();
+      const jaVoice = voices.find((v) =>
+        (v.lang || "").toLowerCase().startsWith("ja")
+      );
+      if (jaVoice) {
+        utter.voice = jaVoice;
+      }
+      utter.lang = "ja-JP";
+      utter.rate = 1;
+      utter.pitch = 1;
+      synth.speak(utter);
+    } catch (err) {
+      console.warn("Speech synthesis failed", err);
+    }
+  }, []);
+
+  const handleAudioClick = (e: React.MouseEvent, hiragana: string) => {
+    e.stopPropagation();
+    speakJapanese(hiragana);
+  };
+
+  const handleStrokeOrderClick = (e: React.MouseEvent, hiragana: string) => {
+    e.stopPropagation();
+    setSelectedChar(hiragana);
+    setShowStrokeModal(true);
   };
 
   const setCharRef = useCallback(
@@ -323,7 +415,7 @@ export default function HiraganaSelector({
                     }
                     toggleChar(char.hiragana);
                   }}
-                  className={`p-3 rounded-lg border-2 transition-colors ${
+                  className={`p-3 rounded-lg border-2 transition-colors relative ${
                     selected
                       ? "bg-green-500 text-white border-green-500"
                       : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-green-300"
@@ -333,6 +425,36 @@ export default function HiraganaSelector({
                     {char.hiragana}
                   </div>
                   <div className="text-xs opacity-75">{char.romaji}</div>
+
+                  {/* Audio and stroke order buttons */}
+                  <div className="absolute top-1 right-1 flex gap-1">
+                    <button
+                      onClick={(e) => handleAudioClick(e, char.hiragana)}
+                      className={`p-1 rounded-full transition-colors ${
+                        selected
+                          ? "bg-white/20 hover:bg-white/30 text-white"
+                          : "bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-600 dark:text-gray-300"
+                      }`}
+                      title="Play audio"
+                    >
+                      <Volume2 className="w-3 h-3" />
+                    </button>
+                    {isStandardHiragana(char.hiragana) && (
+                      <button
+                        onClick={(e) =>
+                          handleStrokeOrderClick(e, char.hiragana)
+                        }
+                        className={`p-1 rounded-full transition-colors ${
+                          selected
+                            ? "bg-white/20 hover:bg-white/30 text-white"
+                            : "bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-600 dark:text-amber-300"
+                        }`}
+                        title="View stroke order"
+                      >
+                        <PenTool className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </button>
               );
             })}
@@ -351,6 +473,13 @@ export default function HiraganaSelector({
           </div>
         </div>
       </div>
+
+      {/* Stroke Order Modal */}
+      <StrokeOrderModal
+        open={showStrokeModal}
+        onClose={() => setShowStrokeModal(false)}
+        char={selectedChar}
+      />
     </div>
   );
 }
